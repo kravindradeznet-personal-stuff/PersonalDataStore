@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Secure JSON Vault</title>
+    <style>
+        :root {
+            --bg-app: #0f172a;
+            --bg-surface: #1e293b;
+            --bg-surface-light: #334155;
+            --accent: #6366f1;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #475569;
+            --danger: #ef4444;
+            --success: #10b981;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-app);
+            color: var(--text-main);
+            padding: 16px;
+            padding-bottom: 40px;
+        }
+
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .action-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-surface-light);
+            color: var(--text-main);
+        }
+
+        .btn-danger {
+            background: none;
+            border: none;
+            color: var(--danger);
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-box {
+            flex-grow: 1;
+        }
+
+        .search-input {
+            width: 100%;
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            font-size: 15px;
+            outline: none;
+        }
+
+        .filter-select {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 0 12px;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .cards-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .card {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .card-logo {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            background-color: var(--bg-surface-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--text-muted);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .card-title-details {
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        .card-title {
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .card-link {
+            font-size: 13px;
+            color: var(--accent);
+            text-decoration: none;
+            display: block;
+        }
+
+        .card-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 14px;
+        }
+
+        .credential-box {
+            background-color: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: var(--radius-md);
+            padding: 12px;
+        }
+
+        .cred-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            margin-bottom: 8px;
+            gap: 12px;
+        }
+
+        .cred-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .cred-label {
+            color: var(--text-muted);
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .cred-value-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cred-value {
+            font-family: monospace;
+            font-weight: 500;
+        }
+
+        .action-icon-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 2px;
+            font-size: 15px;
+        }
+
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-muted);
+        }
+
+        .form-control {
+            width: 100%;
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 12px;
+            border-radius: var(--radius-md);
+            font-size: 15px;
+            outline: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background-color: var(--success);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: transform 0.3s ease;
+            z-index: 9999;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <!-- PAGE 1: SEARCH & VAULT LIST -->
+        <div id="view-list" class="view active">
+            <header>
+                <!-- Tapping title acts as a fallback manual sync trigger -->
+                <h1 onclick="document.getElementById('hidden-file-input').click()">Secure Vault</h1>
+                <button id="add-entry-btn" class="btn">Add Entry</button>
+            </header>
+
+            <div class="action-bar">
+                <button id="export-json-btn" class="btn btn-secondary" style="width: 100%;">Export Backup (vault_data.json)</button>
+                <input type="file" id="hidden-file-input" accept=".json" style="display: none;">
+            </div>
+
+            <div class="search-container">
+                <div class="search-box">
+                    <input type="text" id="search-input" class="search-input" placeholder="Search title, username...">
+                </div>
+                <select id="filter-sort" class="filter-select">
+                    <option value="newest">Newest</option>
+                    <option value="az">A - Z</option>
+                </select>
+            </div>
+
+            <div id="cards-container" class="cards-grid"></div>
+        </div>
+
+        <!-- PAGE 2: ADD NEW VAULT ENTRY -->
+        <div id="view-add" class="view">
+            <header>
+                <h1>New Credential</h1>
+                <button id="cancel-entry-btn" class="btn btn-secondary">Cancel</button>
+            </header>
+
+            <form id="vault-form">
+                <div class="form-group">
+                    <label class="form-label">Title *</label>
+                    <input type="text" id="form-title" class="form-control" placeholder="e.g. Google Workspace" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <input type="text" id="form-desc" class="form-control" placeholder="Short details or notes...">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Website URL Link</label>
+                    <input type="url" id="form-link" class="form-control" placeholder="https://example.com">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Username / Email *</label>
+                    <input type="text" id="form-user" class="form-control" placeholder="Enter username" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password *</label>
+                    <input type="text" id="form-pass" class="form-control" placeholder="Enter password" required>
+                </div>
+
+                <button type="submit" class="btn" style="width: 100%; padding: 14px; margin-top: 10px; font-size: 16px;">
+                    Save Entry
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+    <div id="toast" class="toast">Copied to clipboard!</div>
+
+    <script>
+        // Array placeholder fallback
+        var vaultEntries = JSON.parse(localStorage.getItem('vault_json_data')) || [];
+
+        // Auto Fetch JSON File automatically from same directory
+        function loadLocalJsonFile() {
+            fetch('vault_data.json')
+                .then(function(res) { 
+                    if(res.ok) return res.json();
+                    throw new Error('File read blocked or missing');
+                })
+                .then(function(data) {
+                    if (Array.isArray(data)) {
+                        vaultEntries = data;
+                        localStorage.setItem('vault_json_data', JSON.stringify(vaultEntries));
+                        renderCards();
+                        showToast('Loaded data from vault_data.json!');
+                    }
+                })
+                .catch(function(err) {
+                    console.log('Automated dynamic fetch inactive. Reading local cash.');
+                    renderCards();
+                });
+        }
+
+        // View Toggles
+        document.getElementById('add-entry-btn').addEventListener('click', function() {
+            switchView('view-add');
+        });
+
+        document.getElementById('cancel-entry-btn').addEventListener('click', function() {
+            switchView('view-list');
+        });
+
+        document.getElementById('export-json-btn').addEventListener('click', exportToJsonFile);
+        document.getElementById('hidden-file-input').addEventListener('change', manualFilePickerFallback);
+        
+        document.getElementById('search-input').addEventListener('input', renderCards);
+        document.getElementById('filter-sort').addEventListener('change', renderCards);
+        document.getElementById('vault-form').addEventListener('submit', saveEntry);
+
+        function switchView(viewId) {
+            var views = document.querySelectorAll('.view');
+            for (var i = 0; i < views.length; i++) {
+                views[i].classList.remove('active');
+            }
+            document.getElementById(viewId).classList.add('active');
+            if(viewId === 'view-list') {
+                document.getElementById('vault-form').reset();
+                renderCards();
+            }
+        }
+
+        function saveEntry(e) {
+            e.preventDefault();
+            var newEntry = {
+                id: Math.random().toString(36).substring(2, 11),
+                title: document.getElementById('form-title').value.trim(),
+                desc: document.getElementById('form-desc').value.trim(),
+                link: document.getElementById('form-link').value.trim(),
+                user: document.getElementById('form-user').value.trim(),
+                pass: document.getElementById('form-pass').value.trim(),
+                timestamp: Date.now()
+            };
+
+            vaultEntries.unshift(newEntry);
+            localStorage.setItem('vault_json_data', JSON.stringify(vaultEntries));
+            showToast('Added! Remember to export to save modifications.');
+            switchView('view-list');
+        }
+
+        function exportToJsonFile() {
+            var dataStr = JSON.stringify(vaultEntries, null, 4);
+            var blob = new Blob([dataStr], { type: 'application/json' });
+            var downloadLink = document.createElement('a');
+            
+            downloadLink.download = 'vault_data.json';
+            downloadLink.href = window.URL.createObjectURL(blob);
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            showToast('Saved as vault_data.json!');
+        }
+
+        function manualFilePickerFallback(e) {
+            var file = e.target.files[0];
+            if (!file) return;
+
+            var reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    var parsedData = JSON.parse(event.target.result);
+                    if (Array.isArray(parsedData)) {
+                        vaultEntries = parsedData;
+                        localStorage.setItem('vault_json_data', JSON.stringify(vaultEntries));
+                        renderCards();
+                        showToast('Synchronized!');
+                    }
+                } catch(err) {
+                    alert('Invalid file format.');
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        }
+
+        window.deleteEntry = function(id) {
+            if(confirm('Delete permanently?')) {
+                vaultEntries = vaultEntries.filter(function(entry) { return entry.id !== id; });
+                localStorage.setItem('vault_json_data', JSON.stringify(vaultEntries));
+                renderCards();
+            }
+        };
+
+        window.togglePasswordVisibility = function(id) {
+            var passElem = document.getElementById('pass-text-' + id);
+            var btnElem = document.getElementById('toggle-btn-' + id);
+            var entry = vaultEntries.find(function(e) { return e.id === id; });
+            
+            if (passElem.innerText === '••••••••') {
+                passElem.innerText = entry.pass;
+                btnElem.innerText = '👁️';
+            } else {
+                passElem.innerText = '••••••••';
+                btnElem.innerText = '👁️‍🗨️';
+            }
+        };
+
+        window.copyText = function(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                showToast('Copied!');
+            }).catch(function() {
+                var t = document.createElement('input');
+                t.value = text;
+                document.body.appendChild(t);
+                t.select();
+                document.execCommand('copy');
+                document.body.removeChild(t);
+                showToast('Copied!');
+            });
+        };
+
+        function showToast(msg) {
+            var toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(function() { toast.classList.remove('show'); }, 2000);
+        }
+
+        function renderCards() {
+            var container = document.getElementById('cards-container');
+            var searchQ = document.getElementById('search-input').value.toLowerCase().trim();
+            var sortVal = document.getElementById('filter-sort').value;
+
+            var records = [];
+            for (var k = 0; k < vaultEntries.length; k++) {
+                records.push(vaultEntries[k]);
+            }
+
+            if(searchQ) {
+                records = records.filter(function(r) {
+                    return r.title.toLowerCase().indexOf(searchQ) !== -1 || 
+                           r.user.toLowerCase().indexOf(searchQ) !== -1 ||
+                           (r.desc && r.desc.toLowerCase().indexOf(searchQ) !== -1);
+                });
+            }
+
+            if(sortVal === 'az') {
+                records.sort(function(a, b) { return a.title.localeCompare(b.title); });
+            } else {
+                records.sort(function(a, b) { return b.timestamp - a.timestamp; });
+            }
+
+            if(records.length === 0) {
+                container.innerHTML = '<div class="empty-state">Vault is empty. Add entries or verify vault_data.json is nearby.</div>';
+                return;
+            }
+
+            var htmlContent = '';
+            for (var i = 0; i < records.length; i++) {
+                var item = records[i];
+                var firstLetter = item.title.charAt(0).toUpperCase();
+                
+                var linkHtml = item.link ? 
+                    '<a href="' + item.link + '" target="_blank" rel="noopener noreferrer" class="card-link">Open Website ↗</a>' : 
+                    '<span style="font-size:12px; color:var(--text-muted)">No URL</span>';
+
+                var descHtml = item.desc ? '<div class="card-desc">' + item.desc + '</div>' : '';
+
+                htmlContent += '<div class="card">' +
+                                '<div class="card-header">' +
+                                    '<div class="card-logo">' + firstLetter + '</div>' +
+                                    '<div class="card-title-details">' +
+                                        '<div class="card-title">' + item.title + '</div>' +
+                                        linkHtml +
+                                    '</div>' +
+                                    '<button class="btn-danger" onclick="window.deleteEntry(\'' + item.id + '\')">🗑️</button>' +
+                                '</div>' +
+                                descHtml +
+                                '<div class="credential-box">' +
+                                    '<div class="cred-row">' +
+                                        '<span class="cred-label">Username</span>' +
+                                        '<div class="cred-value-wrapper">' +
+                                            '<span class="cred-value">' + item.user + '</span>' +
+                                            '<button class="action-icon-btn" onclick="window.copyText(\'' + item.user + '\')">📋</button>' +
+                                        '</div>' +
+                                    '</div>' +
+                                    '<div class="cred-row">' +
+                                        '<span class="cred-label">Password</span>' +
+                                        '<div class="cred-value-wrapper">' +
+                                            '<span class="cred-value" id="pass-text-' + item.id + '">••••••••</span>' +
+                                            '<button class="action-icon-btn" id="toggle-btn-' + item.id + '" onclick="window.togglePasswordVisibility(\'' + item.id + '\')">👁️‍🗨️</button>' +
+                                            '<button class="action-icon-btn" onclick="window.copyText(\'' + item.pass + '\')">📋</button>' +
+                                        '</div>' +
+                                    '</div>' +
+                                '</div>' +
+                            '</div>';
+            }
+            container.innerHTML = htmlContent;
+        }
+
+        // Run bootstrap initial checks
+        loadLocalJsonFile();
+    </script>
+</body>
+</html>
